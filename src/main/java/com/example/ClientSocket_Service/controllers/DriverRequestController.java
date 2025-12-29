@@ -4,6 +4,7 @@ import com.example.ClientSocket_Service.dto.RideRequestDto;
 import com.example.ClientSocket_Service.dto.RideResponseDto;
 import com.example.ClientSocket_Service.dto.UpdateBookingRequestDto;
 import com.example.ClientSocket_Service.dto.UpdateBookingResponseDto;
+import com.example.ClientSocket_Service.producers.KafkaProducerService;
 import com.example.UberProject_EntityService.models.BookingStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +21,18 @@ import java.util.Optional;
 public class DriverRequestController {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final RestTemplate restTemplate;
+    private final KafkaProducerService kafkaProducerService;
 
-    public DriverRequestController(SimpMessagingTemplate simpMessagingTemplate,RestTemplate restTemplate){
+    public DriverRequestController(SimpMessagingTemplate simpMessagingTemplate,RestTemplate restTemplate,KafkaProducerService kafkaProducerService){
         this.simpMessagingTemplate=simpMessagingTemplate;
         this.restTemplate=restTemplate;
+        this.kafkaProducerService=kafkaProducerService;
+    }
+
+    @GetMapping
+    public Boolean demo(){
+        kafkaProducerService.publishMessage("sample-topic","hello");
+        return true;
     }
 
     @PostMapping("/newride")
@@ -38,7 +47,7 @@ public class DriverRequestController {
     }
 
     @MessageMapping("/rideResponse/{userId}")
-    public void rideResponseHandler(@DestinationVariable String userId, RideResponseDto rideResponseDto){
+    public synchronized void rideResponseHandler(@DestinationVariable String userId, RideResponseDto rideResponseDto){
         UpdateBookingRequestDto requestDto=UpdateBookingRequestDto.builder()
                 .status(BookingStatus.SCHEDULED)
                 .driverId(Optional.of(Long.parseLong(userId)))
