@@ -41,7 +41,7 @@ public class DriverRequestController {
     public void rideResponseHandler(@DestinationVariable String userId, RideResponseDto rideResponseDto){
         UpdateBookingRequestDto requestDto=UpdateBookingRequestDto.builder()
                 .status(BookingStatus.SCHEDULED)
-                .driverId(Long.parseLong(userId))
+                .driverId(Optional.of(Long.parseLong(userId)))
                 .build();
         System.out.println(rideResponseDto.getResponse()+" "+userId);
         ResponseEntity<UpdateBookingResponseDto> result = this.restTemplate.postForEntity("http://localhost:7480/api/v1/booking/"+rideResponseDto.getBookingId(),requestDto, UpdateBookingResponseDto.class);
